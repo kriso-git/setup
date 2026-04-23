@@ -1,6 +1,6 @@
 #!/bin/bash
 # Kriso · Laptop Setup Script (macOS)
-# Futtatás: curl -fsSL https://raw.githubusercontent.com/kriso-git/setup/main/setup.sh | bash
+# Futtatás: curl -fsSL https://raw.githubusercontent.com/kriso-git/setup/main/setup.sh -o ~/setup.sh && chmod +x ~/setup.sh && bash ~/setup.sh
 
 set -e
 
@@ -11,7 +11,7 @@ DIM='\033[2m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-TOTAL=8
+TOTAL=10
 STEP=0
 
 bar() {
@@ -130,7 +130,72 @@ install_deps "donna-pizza"
 install_deps "alexoldal"
 install_deps "f3xykee-terminal"
 
-# ── 8. f3xykee .env.local ────────────────────────────────────
+# ── 8. Claude Code skills ────────────────────────────────────
+bar "Claude Code skillек"
+
+SKILLS_DIR="$HOME/.claude/skills"
+mkdir -p "$SKILLS_DIR"
+
+sync_skill() {
+  local repo=$1 name=$2
+  if [[ -d "$SKILLS_DIR/$name/.git" ]]; then
+    git -C "$SKILLS_DIR/$name" pull --quiet
+    skip "$name — naprakész"
+  else
+    run "$name letöltése..."
+    git clone "https://github.com/$repo.git" "$SKILLS_DIR/$name" --quiet
+    ok "$name — kész"
+  fi
+}
+
+sync_skill "pbakaus/impeccable"                    "impeccable"
+sync_skill "nextlevelbuilder/ui-ux-pro-max-skill"  "ui-ux-pro-max-skill"
+sync_skill "amaancoderx/npxskillui"                "npxskillui"
+sync_skill "dgreenheck/webgpu-claude-skill"        "webgpu-claude-skill"
+sync_skill "VoltAgent/awesome-design-md"           "awesome-design-md"
+
+# ── 9. Claude Code settings.json ────────────────────────────
+bar "Claude Code beállítások"
+
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+
+if [[ -f "$CLAUDE_SETTINGS" ]]; then
+  skip "settings.json — már megvan"
+else
+  mkdir -p "$HOME/.claude"
+  cat > "$CLAUDE_SETTINGS" << 'EOF'
+{
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "frontend-design@claude-code-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
+    },
+    "claude-code-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-code"
+      }
+    },
+    "anthropic-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/skills"
+      }
+    }
+  },
+  "effortLevel": "high"
+}
+EOF
+  ok "settings.json létrehozva"
+fi
+
+# ── 10. f3xykee .env.local ───────────────────────────────────
 bar "f3xykee környezeti változók"
 cd "$WORK/f3xykee-terminal"
 
@@ -161,4 +226,7 @@ echo ""
 echo -e "  ${CYAN}donna-pizza${NC}       cd ~/Website\ Biz/donna-pizza && npm run dev"
 echo -e "  ${CYAN}alexoldal${NC}         cd ~/Website\ Biz/alexoldal && npm run dev"
 echo -e "  ${CYAN}f3xykee-terminal${NC}  cd ~/Website\ Biz/f3xykee-terminal && npm run dev"
+echo ""
+echo -e "  ${DIM}Claude Code pluginok aktiválásához:${NC}"
+echo -e "  ${DIM}Írd be a chatbe: /plugin install superpowers@superpowers-marketplace${NC}"
 echo ""
