@@ -137,9 +137,15 @@ cd "$WORK/f3xykee-terminal"
 if [[ -f ".env.local" ]]; then
   skip ".env.local — már megvan"
 else
-  run "Vercel bejelentkezés és kulcsok letöltése..."
   echo ""
-  vercel link --yes 2>/dev/null || vercel link
+  echo -e "  ${YELLOW}!${NC}  Vercel bejelentkezés szükséges."
+  echo -e "  ${DIM}   Böngésző nyílik — jelentkezz be, majd gyere vissza ide.${NC}"
+  echo ""
+  vercel login
+  echo ""
+  run "Projekt összekapcsolása..."
+  vercel link --yes
+  run "Kulcsok letöltése..."
   vercel env pull .env.local
   ok ".env.local letöltve"
 fi
